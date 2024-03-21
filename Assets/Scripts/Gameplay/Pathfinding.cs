@@ -29,7 +29,7 @@ public class Pathfinding : MonoBehaviour
             Tile tile = openSet[0];
             for (int i = 1; i < openSet.Count; i++)
             {
-                if (openSet[i].F < tile.F || openSet[i].F == tile.F)
+                if (openSet[i].F <= tile.F)
                 {
                     if (openSet[i].H < tile.H)
                         tile = openSet[i];
