@@ -24,7 +24,6 @@ public class Tile : MasterMonoBehaviour
 
     private TweenerCore<Color,Color,ColorOptions> errorTweener;
 
-    private int _f;
     [HideInInspector] public int H;
     [HideInInspector] public int G;
     [HideInInspector] public Tile parent;
