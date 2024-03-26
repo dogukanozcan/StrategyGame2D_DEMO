@@ -34,7 +34,7 @@ public class Board
         }
     }
 
-    public Tile GetNeighbourEmptyTile(Tile originTile, Tile sourceTile)
+    public Tile GetNeighbourEmptyTile(Tile originTile, Tile sourceTile, Soldier except = null)
     {
         var tileList = new List<Vector2Int>() { 
             new Vector2Int(1,0),
@@ -50,9 +50,13 @@ public class Board
         Tile minDistanceTile = null;
         foreach (var item in tileList)
         {
-            if (originTile.GetNeighbourByDirection(item.x, item.y).isEmpty)
+            var target = originTile.GetNeighbourByDirection(item.x, item.y);
+            if (target == null)
             {
-                var target = originTile.GetNeighbourByDirection(item.x, item.y);
+                continue;
+            }
+            if (target.isEmpty || (!target.isEmpty && target.boardUnit == except))
+            {
                 var distance = sourceTile.TileDistance(target);
                 if(distance < minDistance)
                 {
@@ -118,5 +122,8 @@ public class Board
         return nearstTile;
     }
 
-   
+
+  
+
+
 }

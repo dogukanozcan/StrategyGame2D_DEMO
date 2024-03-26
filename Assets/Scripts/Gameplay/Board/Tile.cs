@@ -21,6 +21,7 @@ public class Tile : MasterMonoBehaviour
     [HideInInspector] public Vector2Int index;
 
     public bool isEmpty = true;
+    public BoardUnit boardUnit = null;
 
     private TweenerCore<Color,Color,ColorOptions> errorTweener;
 
@@ -68,11 +69,4 @@ public class Tile : MasterMonoBehaviour
         return Vector2Int.Distance(index, target.index);
     }
 
-    #region PathFinding
-    private static int ComputeHScore(int x, int y, int targetX, int targetY)
-    {
-        return Mathf.Abs(targetX - x) + Mathf.Abs(targetY - y);
-    }
-
-    #endregion
 }

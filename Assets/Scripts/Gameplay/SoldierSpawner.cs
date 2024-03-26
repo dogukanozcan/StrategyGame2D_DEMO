@@ -27,13 +27,15 @@ public class SoldierSpawner : MonoBehaviour
         var boardUnit = BoardManager.Instance.selectedBoardUnit;
         if (boardUnit.GetType().Equals(typeof(Barracks)))
         {
-            var tile = ((Barracks)boardUnit).spawnPoint.originTile;
+            //var tile = ((Barracks)boardUnit).spawnPoint.originTile;
+            var tile = BoardManager.Instance.board.GetNearstEmptyTile(((Barracks)boardUnit).spawnPoint.originTile);
             if (soldier != null && tile != null)
             {
-                
                 soldier.gameObject.SetActive(true);
                 soldier.transform.position = tile.transform.position;
+                soldier.transform.position -= Vector3.forward;
                 soldier.Placed(tile);
+                tile.isEmpty = false;
             }
             else
             {

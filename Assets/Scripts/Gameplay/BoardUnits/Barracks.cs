@@ -10,6 +10,7 @@ public class Barracks : Building
     public SpawnPoint spawnPoint;
 
     private Coroutine spawnPointColliderChecker;
+
     public override void OnMouseDown()
     {
         base.OnMouseDown();
@@ -63,12 +64,33 @@ public class Barracks : Building
     {
         while (true)
         {
-            yield return new WaitWhile(() => spawnPoint.originTile.isEmpty);
+            yield return new WaitUntil(() => ChangeSpawnPointStatus());
             SetSpawnPoint(GetNearstEmptyTileSpawnPoint());
             yield return new WaitForFixedUpdate();
         }
         
     }
+    //Check Spawn point collide
+    private bool ChangeSpawnPointStatus()
+    {
+        if (!spawnPoint.originTile.isEmpty)
+        {
+            if (spawnPoint.originTile.boardUnit)
+            {
+                //if board unit is a soldier dont change the point position if is board unit a soldier return false else return true
+                return !spawnPoint.originTile.boardUnit.GetType().Equals(typeof(Soldier));
+            }
+            else
+            {
+                return true;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     private Tile GetNearstEmptyTileSpawnPoint()
     {
         return BoardManager.Instance.board.GetNearstEmptyTile(spawnPoint.originTile);

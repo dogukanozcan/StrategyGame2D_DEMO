@@ -17,43 +17,97 @@ public class Soldier : BoardUnit
 
     private bool onMoving = false;
 
+    public List<BoardUnit> check;
+
+    private Coroutine attackerCoroutine;
+
+    private Coroutine moveCoroutine;
+
     private void Start()
     {
-        StartCoroutine(Attacker());
+        
     }
+
+    private void OnEnable()
+    {
+        attackerCoroutine = StartCoroutine(Attacker());
+    }
+
+    private void OnDisable()
+    {
+        StopCoroutine(attackerCoroutine);
+        attackerCoroutine = null;
+    }
+
+    private void Update()
+    {
+      
+    }
+
+    
     public void Move(Tile targetTile)
     {
         if (onMoving)
+        {
+            if (moveCoroutine != null)
+                StopCoroutine(moveCoroutine);
+
+            animator.SetBool(runBoolName, false);
+            onMoving = false;
+        }
+            
+
+        if (targetTile == null)
             return;
 
         onMoving = true;
+
+        targetTile.ErrorHighlight(Color.green);
+        
         animator.SetBool(runBoolName, onMoving);
 
         var start = originTile;
         var end = targetTile;
         var path = Pathfinding.Instance.FindPath(start, end);
 
-       StartCoroutine(Move(path));
+        moveCoroutine = StartCoroutine(Move(path,targetTile));
     }
 
-    public IEnumerator Move(List<Tile> path, float animationTimePerTile = .2f)
+    public IEnumerator Move(List<Tile> path, Tile targetTile, float animationTimePerTile = .2f)
     {
+        bool failedToMove = false;
         if(path != null)
         {
             foreach (var item in path)
             {
+                if (!item.isEmpty)
+                {
+                    failedToMove = true;
+                    break;
+                }
                 transform.DOMove(item.transform.position, animationTimePerTile);
+                originTile.isEmpty = true;
+                item.isEmpty = false;
                 Placed(item);
                 yield return new WaitForSeconds(animationTimePerTile);
             }
         }
+
+        
         animator.SetBool(runBoolName, false);
         onMoving = false;
+
+        if(failedToMove)
+            Move(targetTile);
     }
 
     public void SetTarget(BoardUnit target)
     {
         targetUnit = target;
+
+        if (target == null)
+            return;
+
         if(originTile.index.x < target.originTile.index.x)
         {
             mainSpriteRenderer.flipX = false;
@@ -87,6 +141,7 @@ public class Soldier : BoardUnit
         foreach (var item in ortogonal)
         {
             var direction = item.normalized;
+           // Debug.DrawRay(originTile.transform.position + (direction * (cellSize / 2f)) + (direction / 100f), direction);
             var raycastHit = Physics2D.Raycast(originTile.transform.position + (direction * (cellSize/2f))+ (direction/100f), direction, cellSize, unitMask);
             var unit = raycastHit.collider?.GetComponent<BoardUnit>();
             if(unit)
@@ -95,6 +150,7 @@ public class Soldier : BoardUnit
         foreach (var item in diagonal)
         {
             var direction = item.normalized;
+            //Debug.DrawRay(originTile.transform.position + (direction * (cellSize / 2f)) + (direction / 100f), direction);
             var raycastHit = Physics2D.Raycast(originTile.transform.position + (direction * tileDiagonalLength/2f) + (direction / 100f), direction, tileDiagonalLength, unitMask);
             var unit = raycastHit.collider?.GetComponent<BoardUnit>();
             if (unit)
@@ -103,7 +159,7 @@ public class Soldier : BoardUnit
         return list;
     }
 
-    public List<BoardUnit> check;
+
     public IEnumerator Attacker()
     {
         while(true)
@@ -114,7 +170,7 @@ public class Soldier : BoardUnit
             check = NeighboursCheck();
             if (!check.Contains(targetUnit))
             {
-                yield return new WaitForSeconds(.2f);
+                yield return new WaitForSeconds(.05f);
                 continue;
             }
           
@@ -122,7 +178,6 @@ public class Soldier : BoardUnit
             animator.SetTrigger(attackTriggerName);
             if (targetUnit.isDead)
             {
-                print("isDead NULL");
                 targetUnit = null;
             }
             yield return new WaitForSeconds(1);

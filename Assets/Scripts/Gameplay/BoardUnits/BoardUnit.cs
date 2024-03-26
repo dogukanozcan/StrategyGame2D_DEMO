@@ -76,7 +76,7 @@ public class BoardUnit : MasterMonoBehaviour
         {
             BoardUI.Instance.ResetSelectedBoardUnit();
         }
-        Destroy();
+        Delay(Destroy, .04f);
     }
 
     public virtual void Destroy()
@@ -87,11 +87,13 @@ public class BoardUnit : MasterMonoBehaviour
 
     public virtual void Placed(Tile originTile) 
     {
+        originTile.boardUnit = this;
         this.originTile = originTile;
     }
 
     public virtual void OnMouseDown()
     {
+     
         if (EventSystem.current.IsPointerOverGameObject()) {
             return;
         }

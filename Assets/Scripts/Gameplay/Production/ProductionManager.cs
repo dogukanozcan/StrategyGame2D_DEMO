@@ -29,13 +29,32 @@ public class ProductionManager : MonoBehaviour
     /// <param name="unitName"></param>
     public void SetSelectedPlaceableUnit(BoardUnit boardUnit)
     {
+        if (selectedPlaceableUnit == boardUnit) 
+        {
+            ResetSelectedPlaceableUnit();
+            return;
+        }
+
+        AlertManagerUI.Instance.ShowAlert("Press \"ESC\" to cancel the selection");
         selectedPlaceableUnit = boardUnit;
     }
 
     public void ResetSelectedPlaceableUnit()
     {
+        AlertManagerUI.Instance.HideAlert();
         selectedPlaceableUnit = null;
         ProductionMenuUI.Instance.ResetSelectedPlaceableUnit();
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            if(selectedPlaceableUnit != null)
+            {
+                ResetSelectedPlaceableUnit();
+            }
+        }
     }
 
 

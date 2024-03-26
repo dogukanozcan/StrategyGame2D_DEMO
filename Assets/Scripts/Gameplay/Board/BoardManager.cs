@@ -20,6 +20,8 @@ public class BoardManager : MonoBehaviour
 
     [HideInInspector] public BoardUnit selectedBoardUnit;
     [HideInInspector] public bool spawnPointChange = false;
+
+    [SerializeField] private SpriteRenderer boardEdge;
     //[HideInInspector] public Barracks selectedBarracks;
     private void Awake()
     {
@@ -36,11 +38,21 @@ public class BoardManager : MonoBehaviour
     private void Start()
     {
         board = new Board(boardWidth, boardHeight);
+        var edgeSize = (boardWidth + boardHeight) / 30f;
+        boardEdge.transform.localScale = new Vector3(boardWidth + edgeSize, boardHeight + edgeSize, 1);
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0) && !EventSystem.current.IsPointerOverGameObject())
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (selectedBoardUnit != null)
+            {
+                BoardUI.Instance.ResetSelectedBoardUnit();
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.Mouse0) && !CameraManager.Instance.onDrag && !EventSystem.current.IsPointerOverGameObject())
         {
             if (ProductionManager.Instance.selectedPlaceableUnit != null)
             {
@@ -79,31 +91,48 @@ public class BoardManager : MonoBehaviour
                 if (tile == null)
                 {
                     var boardUnit = GetBoardUnitMouseOver();
+                    if (boardUnit == null)
+                        return;
+
                     if (boardUnit.GetType().Equals(typeof(Soldier)))
                     {
                         //Soldier Selected
                         var targetSoldier = (Soldier)boardUnit;
                         var selectedSoldier = (Soldier)selectedBoardUnit;
+                        if(targetSoldier == selectedSoldier)
+                        {
+                            //cant attack self
+                            return;
+                        }
                         selectedSoldier.SetTarget(targetSoldier);
-                        tile = board.GetNeighbourEmptyTile(boardUnit.originTile,selectedBoardUnit.originTile);
+                        tile = board.GetNeighbourEmptyTile(boardUnit.originTile,selectedBoardUnit.originTile, selectedSoldier);
 
                     }
                     else
                     {
+                       
+
                         //BUILDING CLICKED
-                        tile = board.GetTileByWorldPosition(MousePositionToWorldPosition());
-                        if (!tile.isEmpty)
+                        var building = (Building)boardUnit;
+                        //tile = board.GetTileByWorldPosition(MousePositionToWorldPosition());
+                        var selectedSoldier = (Soldier)selectedBoardUnit;
+                        selectedSoldier.SetTarget(boardUnit);
+                        tile = building.GetNearstTileBySoldier(selectedSoldier);
+                        
+                        if (!tile.isEmpty && tile != selectedBoardUnit.originTile)
                         {
                             tile = board.GetNearstEmptyTile(tile);
-                            var selectedSoldier = (Soldier)selectedBoardUnit;
-                            selectedSoldier.SetTarget(boardUnit);
                         }
+                        
                     }
-
-                  
                 }
-
-                
+                else
+                {
+                    //tile selected 
+                    var selectedSoldier = (Soldier)selectedBoardUnit;
+                    selectedSoldier.SetTarget(null);
+                }
+              
                 var soldier = (Soldier)selectedBoardUnit;
                 soldier.Move(tile);
             }
@@ -204,6 +233,7 @@ public class BoardManager : MonoBehaviour
         offset.x -= board.tileSize / 2.0f;
         offset.y -= board.tileSize / 2.0f;
         selectedPlaceableUnit.transform.position = (Vector2)originTile.transform.position + offset;
+        selectedPlaceableUnit.transform.position -= Vector3.forward;
 
         for (int i = 0; i < selectedPlaceableUnit.dimension.x; i++)
         {
